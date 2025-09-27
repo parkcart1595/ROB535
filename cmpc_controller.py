@@ -81,10 +81,13 @@ def LQR_Controller(x_bar, u_bar, x0, param):
     #                    TODO: Implement your code here                         #
     #############################################################################
 
+    # --- 1. Define Tuning Parameters & CVXPY Variables ---
+    
+    # Q penalizes state errors (x, y, psi, v). Higher values mean tighter tracking.
     Q = np.diag([10.0, 10.0, 1.0, 1.0])
-
+    # R penalizes control effort (a, delta). Higher values mean smoother control.
     R = np.diag([0.1, 0.1])
-
+    # Pt penalizes terminal state error. Often same as Q.
     Pt = Q
 
     # Define optimization variables for the entire horizon
@@ -139,6 +142,9 @@ def LQR_Controller(x_bar, u_bar, x0, param):
     return u_act
 
 def CMPC_Controller(x_bar, u_bar, x0, param):
+    """
+    Solves the constrained MPC problem for trajectory tracking. (similar as LQR)
+    """
     len_state = x_bar.shape[0]
     len_ctrl  = u_bar.shape[0]
     dim_state = x_bar.shape[1]
@@ -153,26 +159,67 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
 
     a_limit = param["a_lim"]
     delta_limit = param["delta_lim"]
+
     
     #############################################################################
     #                    TODO: Implement your code here                         #
     #############################################################################
     
-    # define the parameters
-    # Q = np.eye(4)  * ...
-    # R = np.eye(2)  * ...
-    # Pt = np.eye(4) * ...
+
+    # --- 1. Define Tuning Parameters & CVXPY Variables ---
+
+    # Use the same tuning parameters as LQR for consistency
+    Q = np.diag([10.0, 10.0, 1.0, 1.0])
+    R = np.diag([0.1, 0.1])
+    Pt = Q
     
-    # define the cost function
-    # P = ...
-    # q = ...
+    delta_s_k = cp.Variable((len_state, dim_state), name="delta_x_k")
+    delta_u_k = cp.Variable((len_ctrl, dim_ctrl), name="delta_u_k")
     
-    # define the constraints
-    # A = ...
-    # b = ...
-    # G = ...
-    # ub = ...
-    # lb = ...
+    # --- 2. Construct Cost Function (Identical to LQR) ---
+    
+    cost = 0
+    for k in range(len_ctrl):
+        cost += cp.quad_form(delta_s_k[k, :], Q) + cp.quad_form(delta_u_k[k, :], R)
+    cost += cp.quad_form(delta_s_k[len_ctrl, :], Pt)
+
+    # --- 3. Construct Constraints (LQR constraints + Input constraints) ---
+    
+    constraints = []
+    
+    # Initial state constraint
+    constraints.append(delta_s_k[0, :] == x0 - x_bar[0, :])
+    
+    # Dynamics and Input constraints
+    for k in range(len_ctrl):
+        # Dynamics constraint (same as LQR)
+        A_k, B_k = calc_Jacobian(x_bar[k, :], u_bar[k, :], param)
+        constraints.append(delta_s_k[k+1, :] == A_k @ delta_s_k[k, :] + B_k @ delta_u_k[k, :])
+        
+        # **NEW for MPC**: Input constraints
+        # The problem is formulated in terms of deviations delta_u, so the limits must be adjusted by the reference input u_bar.
+        # u_min <= u_bar_k + δu_k <= u_max  =>  u_min - u_bar_k <= δu_k <= u_max - u_bar_k
+        
+        # Acceleration limits
+        constraints.append(delta_u_k[k, 0] <= a_limit[1] - u_bar[k, 0])
+        constraints.append(delta_u_k[k, 0] >= a_limit[0] - u_bar[k, 0])
+        
+        # Steering angle limits
+        constraints.append(delta_u_k[k, 1] <= delta_limit[1] - u_bar[k, 1])
+        constraints.append(delta_u_k[k, 1] >= delta_limit[0] - u_bar[k, 1])
+
+    # --- 4. Define and Solve the Problem ---
+    
+    prob = cp.Problem(cp.Minimize(cost), constraints)
+    prob.solve(solver=cp.OSQP, verbose=False)
+
+    if prob.status != cp.OPTIMAL:
+        print(f"CMPC problem could not be solved. Status: {prob.status}")
+        return u_bar[0, :]
+
+    # The actual control to apply is the first optimal control deviation
+    # added to the reference control input.
+    u_act = delta_u_k.value[0, :] + u_bar[0, :]
 
     # Define and solve the CVXPY problem.
     # x = cp.Variable(n_var)
@@ -184,5 +231,5 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     #############################################################################
     
     # u_act = x.value[n_x:n_x + dim_ctrl] + u_bar[0, :]
-    u_act = u_bar[0,:]
+
     return u_act
