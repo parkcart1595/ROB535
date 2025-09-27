@@ -169,8 +169,8 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # --- 1. Define Tuning Parameters & CVXPY Variables ---
 
     # Use the same tuning parameters as LQR for consistency
-    Q = np.diag([100.0, 100.0, 100.0, 100.0])
-    R = np.diag([0.01, 0.01])
+    Q = np.diag([100.0, 100.0, 1.0, 1.0])
+    R = np.diag([0.5, 0.5])
     Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0])
     
     delta_s_k = cp.Variable((len_state, dim_state), name="delta_x_k")
