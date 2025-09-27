@@ -18,7 +18,7 @@ def ACC_Controller(t, x, param):
     #############################################################################
 
     # set the parameters
-    lam = 1.0       # lambda for CLF (tracking performance)
+    lam = 10.0       # lambda for CLF (tracking performance)
     alpha = 1.0     # alpha for CBF (class K function)
     w = 100.0       # weight for the slack variable delta
 
@@ -54,7 +54,7 @@ def ACC_Controller(t, x, param):
     b[0] = -lam * h
 
     # 2. Safety Constraint (CBF): (1/m)*(1.8 + (v-v0)/Cdg)*F_w <= (v0-v) + alpha*B
-    A[1, 0] = (1.0 / m) * (1.8 + (v - v0) / Cdg)
+    A[1, 0] = (1.0 / m) * (1.8 + v_rel / Cdg)
     A[1, 1] = 0.0
     b[1] = (v0 - v) + alpha * B
     
