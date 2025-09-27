@@ -19,7 +19,7 @@ def ACC_Controller(t, x, param):
 
     # set the parameters
     lam = 10.0       # lambda for CLF (tracking performance)
-    alpha = 1.0     # alpha for CBF (class K function)
+    alpha = 0.1     # alpha for CBF (class K function)
     w = 100.0       # weight for the slack variable delta
 
     # Current state
