@@ -18,9 +18,9 @@ def ACC_Controller(t, x, param):
     #############################################################################
 
     # set the parameters
-    lam = 10.0       # lambda for CLF (tracking performance)
-    alpha = 0.1     # alpha for CBF (class K function)
-    w = 100.0       # weight for the slack variable delta
+    lam = 100.0       # lambda for CLF (tracking performance)
+    alpha = 1.0     # alpha for CBF (class K function)
+    w = 100000.0       # weight for the slack variable delta
 
     # Current state
     D = x[0]  # Distance to lead vehicle
