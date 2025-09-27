@@ -170,7 +170,7 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
 
     # Use the same tuning parameters as LQR for consistency
     Q = np.diag([100.0, 100.0, 100.0, 100.0])
-    R = np.diag([0.1, 0.1])
+    R = np.diag([0.01, 0.01])
     Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0])
     
     delta_s_k = cp.Variable((len_state, dim_state), name="delta_x_k")
