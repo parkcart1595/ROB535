@@ -138,50 +138,51 @@ def LQR_Controller(x_bar, u_bar, x0, param):
 
     return u_act
 
-# def CMPC_Controller(x_bar, u_bar, x0, param):
-#     len_state = x_bar.shape[0]
-#     len_ctrl  = u_bar.shape[0]
-#     dim_state = x_bar.shape[1]
-#     dim_ctrl  = u_bar.shape[1]
+def CMPC_Controller(x_bar, u_bar, x0, param):
+    len_state = x_bar.shape[0]
+    len_ctrl  = u_bar.shape[0]
+    dim_state = x_bar.shape[1]
+    dim_ctrl  = u_bar.shape[1]
     
-#     n_u = len_ctrl * dim_ctrl
-#     n_x = len_state * dim_state
-#     n_var = n_u + n_x
+    n_u = len_ctrl * dim_ctrl
+    n_x = len_state * dim_state
+    n_var = n_u + n_x
 
-#     n_eq  = dim_state * len_ctrl # dynamics
-#     n_ieq = dim_ctrl * len_ctrl # input constraints
+    n_eq  = dim_state * len_ctrl # dynamics
+    n_ieq = dim_ctrl * len_ctrl # input constraints
 
-#     a_limit = param["a_lim"]
-#     delta_limit = param["delta_lim"]
+    a_limit = param["a_lim"]
+    delta_limit = param["delta_lim"]
     
-#     #############################################################################
-#     #                    TODO: Implement your code here                         #
-#     #############################################################################
+    #############################################################################
+    #                    TODO: Implement your code here                         #
+    #############################################################################
     
-#     # define the parameters
-#     # Q = np.eye(4)  * ...
-#     # R = np.eye(2)  * ...
-#     # Pt = np.eye(4) * ...
+    # define the parameters
+    # Q = np.eye(4)  * ...
+    # R = np.eye(2)  * ...
+    # Pt = np.eye(4) * ...
     
-#     # define the cost function
-#     # P = ...
-#     # q = ...
+    # define the cost function
+    # P = ...
+    # q = ...
     
-#     # define the constraints
-#     # A = ...
-#     # b = ...
-#     # G = ...
-#     # ub = ...
-#     # lb = ...
+    # define the constraints
+    # A = ...
+    # b = ...
+    # G = ...
+    # ub = ...
+    # lb = ...
 
-#     # Define and solve the CVXPY problem.
-#     # x = cp.Variable(n_var)
-#     # prob = cp.Problem(...)
-#     # prob.solve(verbose=False, max_iter = 10000)
+    # Define and solve the CVXPY problem.
+    # x = cp.Variable(n_var)
+    # prob = cp.Problem(...)
+    # prob.solve(verbose=False, max_iter = 10000)
 
-#     #############################################################################
-#     #                            END OF YOUR CODE                               #
-#     #############################################################################
+    #############################################################################
+    #                            END OF YOUR CODE                               #
+    #############################################################################
     
-#     u_act = x.value[n_x:n_x + dim_ctrl] + u_bar[0, :]
-#     return u_act
+    # u_act = x.value[n_x:n_x + dim_ctrl] + u_bar[0, :]
+    u_act = u_bar[0,:]
+    return u_act
