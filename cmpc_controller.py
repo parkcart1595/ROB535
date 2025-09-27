@@ -170,7 +170,7 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
 
     # Use the same tuning parameters as LQR for consistency
     Q = np.diag([10.0, 10.0, 1.0, 1.0])
-    R = np.diag([0.1, 0.1])
+    R = np.diag([0.5, 0.1])
     Pt = Q
     
     delta_s_k = cp.Variable((len_state, dim_state), name="delta_x_k")
@@ -211,7 +211,7 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # --- 4. Define and Solve the Problem ---
     
     prob = cp.Problem(cp.Minimize(cost), constraints)
-    prob.solve(solver=cp.OSQP, verbose=False)
+    prob.solve(solver=cp.ECOS, verbose=False)
 
     if prob.status != cp.OPTIMAL:
         print(f"CMPC problem could not be solved. Status: {prob.status}")
