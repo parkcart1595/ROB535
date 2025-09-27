@@ -211,7 +211,7 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # --- 4. Define and Solve the Problem ---
     
     prob = cp.Problem(cp.Minimize(cost), constraints)
-    prob.solve(solver=cp.ECOS, verbose=False)
+    prob.solve(solver=cp.OSQP, verbose=True)
 
     if prob.status != cp.OPTIMAL:
         print(f"CMPC problem could not be solved. Status: {prob.status}")
