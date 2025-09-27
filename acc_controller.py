@@ -30,9 +30,12 @@ def ACC_Controller(t, x, param):
     # h: Control Lyapunov Function for tracking error
     h = 0.5 * (v - vd)**2
 
+    # Clip the relative velocity at 0.
+    v_rel = max(0, v - v0)
+
     # B: Control Barrier Function for safety
     # Note: The term (v0-v) can be negative, but it is squared, so it's fine.
-    B = D - 1.8 * v - (0.5 * (v - v0)**2) / Cdg
+    B = D - 1.8 * v - (0.5 * v_rel**2) / Cdg
     
     # construct the cost function for min(F_w^2 + w*delta^2)
     # The solver uses the form 0.5 * x'Px, so P must be scaled by 2.
