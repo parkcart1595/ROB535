@@ -174,9 +174,9 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0]) 
 
     # Use the same tuning parameters as LQR for consistency
-    Q = np.diag([100.0, 100.0, 10.0, 10.0]) # state cost matrix
+    Q = np.diag([50.0, 50.0, 10.0, 10.0]) # state cost matrix
     R = np.diag([0.5, 0.5]) # input cost matrix
-    Pt = np.diag([1000.0, 1000.0, 1000.0, 1000.0]) 
+    Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0]) 
     
     delta_s_k = cp.Variable((len_state, dim_state), name="delta_x_k")
     delta_u_k = cp.Variable((len_ctrl, dim_ctrl), name="delta_u_k")
