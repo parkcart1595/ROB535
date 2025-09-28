@@ -174,14 +174,14 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0])
 
     # # Use the same tuning parameters as LQR for consistency
-    Q = np.diag([100.0, 100.0, 100.0, 100.0]) # state cost matrix
-    R = np.diag([0.01, 0.01]) # input cost matrix
-    Pt = np.diag([100000.0, 100000.0, 100000.0, 100000.0]) 
+    # Q = np.diag([100.0, 100.0, 100.0, 100.0]) # state cost matrix
+    # R = np.diag([0.01, 0.01]) # input cost matrix
+    # Pt = np.diag([100000.0, 100000.0, 100000.0, 100000.0]) 
 
     # Use the same tuning parameters as LQR for consistency
-    # Q = np.diag([50.0, 50.0, 1.0, 1.0]) # state cost matrix
-    # R = np.diag([1.0, 1.0]) # input cost matrix
-    # Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0]) 
+    Q = np.diag([50.0, 50.0, 1.0, 1.0]) # state cost matrix
+    R = np.diag([1.0, 1.0]) # input cost matrix
+    Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0]) 
     
     delta_s_k = cp.Variable((len_state, dim_state), name="delta_x_k")
     delta_u_k = cp.Variable((len_ctrl, dim_ctrl), name="delta_u_k")
@@ -221,7 +221,7 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # --- 4. Define and Solve the Problem ---
     
     prob = cp.Problem(cp.Minimize(cost), constraints)
-    prob.solve(solver=cp.OSQP, verbose=False, eps_abs=1e-8, eps_rel=1e-8, max_iter=20000)
+    prob.solve(solver=cp.OSQP, verbose=False, eps_abs=1e-8, eps_rel=1e-8, max_iter=10000)
     # prob.solve(solver=cp.GUROBI, reoptimizie=True)
 
     if prob.status != cp.OPTIMAL:
