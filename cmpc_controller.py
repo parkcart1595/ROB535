@@ -168,10 +168,15 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
 
     # --- 1. Define Tuning Parameters & CVXPY Variables ---
 
+    # # # Use the same tuning parameters as LQR for consistency
+    # Q = np.diag([100.0, 100.0, 1.0, 1.0]) # state cost matrix
+    # R = np.diag([0.5, 0.5]) # input cost matrix
+    # Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0])
+
     # # Use the same tuning parameters as LQR for consistency
-    Q = np.diag([100.0, 100.0, 1.0, 1.0]) # state cost matrix
-    R = np.diag([0.5, 0.5]) # input cost matrix
-    Pt = np.diag([10000.0, 10000.0, 10000.0, 10000.0]) 
+    Q = np.diag([100.0, 100.0, 100.0, 100.0]) # state cost matrix
+    R = np.diag([0.01, 0.01]) # input cost matrix
+    Pt = np.diag([100000.0, 100000.0, 100000.0, 100000.0]) 
 
     # Use the same tuning parameters as LQR for consistency
     # Q = np.diag([50.0, 50.0, 1.0, 1.0]) # state cost matrix
