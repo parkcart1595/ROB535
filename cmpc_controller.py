@@ -216,7 +216,7 @@ def CMPC_Controller(x_bar, u_bar, x0, param):
     # --- 4. Define and Solve the Problem ---
     
     prob = cp.Problem(cp.Minimize(cost), constraints)
-    prob.solve(solver=cp.OSQP, verbose=False, eps_abs=1e-5, eps_rel=1e-5, max_iter=20000)
+    prob.solve(solver=cp.OSQP, verbose=False, eps_abs=1e-8, eps_rel=1e-8, max_iter=20000)
     # prob.solve(solver=cp.GUROBI, reoptimizie=True)
 
     if prob.status != cp.OPTIMAL:
