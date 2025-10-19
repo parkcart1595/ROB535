@@ -22,8 +22,12 @@ def nmpc_controller(kappa_table = None):
     delta = um[1]
 
     ## Air drag and Rolling Resistance
-    Fd = param["Frr"] + param["Cd"] * xm[0]**2
-    Fd = Fd * ca.tanh(- xm[0] * 100)
+    # Fd = param["Frr"] + param["Cd"] * xm[0]**2
+    # Fd = Fd * ca.tanh(- xm[0] * 100)
+    Fd_base = param["Frr"] + param["Cd"] * xm[0]**2
+    v_eps = 1.0
+    sign_v = xm[0] / ca.sqrt(xm[0]**2 + v_eps**2)  # C¹ smooth sign(Ux)
+    Fd = -Fd_base * sign_v
     Fb = 0.0
     ## 
     
@@ -80,7 +84,9 @@ def nmpc_controller(kappa_table = None):
     for k in range(N):
         cons_ineq.append(2.0 - x[0, k])  # <= 0
         # (b) Engine power: Fx <= Peng / max(Ux, eps)
-        cons_ineq.append(u[0, k] - (param["Peng"] / ca.fmax(x[0, k], epsUx)))  # <= 0
+        #cons_ineq.append(u[0, k] - (param["Peng"] / ca.fmax(x[0, k], epsUx)))  # <= 0
+        denom = ca.sqrt(x[0, k]**2 + 1.0)   # ε=1.0 (필요시 0.5~2.0로 조정)
+        cons_ineq.append(u[0, k] - (param["Peng"] / denom))  # <= 0
         # (c) Obstacle: 1 - ((x-500)/10)^2 - (y/10)^2 <= 0
         cons_ineq.append(1.0 - ((x[3, k] - 500.0) / 10.0)**2 - (x[4, k] / 10.0)**2)
 
@@ -103,12 +109,19 @@ def nmpc_controller(kappa_table = None):
     ## cost function design, you can use a desired velocity v_des for stage cost
     ## Refer to section 6 in the notebook for more details.
     
-    # weights
-    w_y, w_phi, w_r, w_Uy = 0.1, 2.0, 0.5, 1.0
+    # weights for case_0
+    w_y, w_phi, w_r, w_Uy = 1.0, 2.0, 0.5, 1.0
     w_v, v_des            = 0.2, 200.0
     w_delta, w_du         = 0.1, 5.0
-    w_mu, w_alpha         = 1e4, 5e3
+    w_mu, w_alpha         = 1e3, 5e3
     w_yT, w_phiT, w_xT    = 1.0, 4.0, 0.0
+    
+    # # weights for case_1
+    # w_y, w_phi, w_r, w_Uy = 0.5, 2.0, 0.5, 1.0
+    # w_v, v_des            = 0.05, 200.0
+    # w_delta, w_du         = 0.1, 5.0
+    # w_mu, w_alpha         = 1e4, 5e3
+    # w_yT, w_phiT, w_xT    = 5.0, 4.0, 0.0
     
     J = 0.0
     J += w_yT * x[4, N]**2 + w_phiT * x[5, N]**2 - w_xT * x[3, N]  # Terminal cost
@@ -141,8 +154,8 @@ def nmpc_controller(kappa_table = None):
         ## Modified front slide sliping angle
         alpha_mod_f = ca.arctan(3 * Fyf_max / param["C_alpha_f"] * xi)
 
-        Fyr_max_sq = (param["mu_f"] * Fzf)**2 - (0.999 * Fxf)**2
-        Fyr_max_sq = (ca.sqrt( Fyr_max_sq**2 + F_offset) + Fyr_max_sq) / 2
+        Fyr_max_sq = (param["mu_r"] * Fzr)**2 - (0.999 * Fxr)**2
+        Fyr_max_sq = (ca.sqrt(Fyr_max_sq**2 + F_offset) + Fyr_max_sq) / 2
         Fyr_max = ca.sqrt(Fyr_max_sq)
 
         ## Modified rear slide sliping angle
@@ -156,7 +169,9 @@ def nmpc_controller(kappa_table = None):
         J += w_mu * (z[2, k]**2 + z[3, k]**2)
 
     # Initial condition as parameters
-    cons_init = [x[:, 0] - p]
+    # cons_init = [x[:, 0] - p]
+    S0 = ca.diag(ca.DM([1/50.0, 1/10.0, 1/5.0, 1/100.0, 1/100.0, 1/10.0]))
+    cons_init = [ca.mtimes(S0, (x[:, 0] - p))]
     ub_init_cons = np.zeros((Dim_state, 1))
     lb_init_cons = np.zeros((Dim_state, 1))
 
