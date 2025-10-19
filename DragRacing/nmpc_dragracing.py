@@ -1,5 +1,6 @@
 from sim import *
 from utils import *
+import numpy as np
 
 def nmpc_controller(kappa_table = None):
     T = 4.0 # planning horizon [s]
@@ -102,7 +103,7 @@ def nmpc_controller(kappa_table = None):
     ## cost function design, you can use a desired velocity v_des for stage cost
     ## Refer to section 6 in the notebook for more details.
     
-    # weights (초기 튠 값)
+    # weights
     w_y, w_phi, w_r, w_Uy = 5.0, 2.0, 0.5, 1.0
     w_v, v_des            = 0.2, 50.0
     w_delta, w_du         = 0.1, 5.0
