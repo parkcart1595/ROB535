@@ -3,8 +3,8 @@ from utils import *
 import numpy as np
 
 def nmpc_controller(kappa_table = None):
-    T = 4.0 # planning horizon [s]
-    N = 40  # control intervals
+    T = 1.0 # planning horizon [s]
+    N = 10  # control intervals
     h = T / N
     
     ###################### Modeling Start ######################
@@ -104,11 +104,11 @@ def nmpc_controller(kappa_table = None):
     ## Refer to section 6 in the notebook for more details.
     
     # weights
-    w_y, w_phi, w_r, w_Uy = 5.0, 2.0, 0.5, 1.0
-    w_v, v_des            = 0.2, 50.0
+    w_y, w_phi, w_r, w_Uy = 0.1, 2.0, 0.5, 1.0
+    w_v, v_des            = 0.2, 200.0
     w_delta, w_du         = 0.1, 5.0
-    w_mu, w_alpha         = 1e3, 5e2
-    w_yT, w_phiT, w_xT    = 10.0, 4.0, 0.0
+    w_mu, w_alpha         = 1e4, 5e3
+    w_yT, w_phiT, w_xT    = 1.0, 4.0, 0.0
     
     J = 0.0
     J += w_yT * x[4, N]**2 + w_phiT * x[5, N]**2 - w_xT * x[3, N]  # Terminal cost
@@ -149,10 +149,10 @@ def nmpc_controller(kappa_table = None):
         alpha_mod_r = ca.arctan(3 * Fyr_max / param["C_alpha_r"] * xi)
 
         ## Limit friction penalty
-        J += w_alpha * ca.if_else(ca.fabs(af_k) >= alpha_mod_f,
-                                  (ca.fabs(af_k) - alpha_mod_f)**2, 0.0)
-        J += w_alpha * ca.if_else(ca.fabs(ar_k) >= alpha_mod_r,
-                                  (ca.fabs(ar_k) - alpha_mod_r)**2, 0.0)
+        # J += w_alpha * ca.if_else(ca.fabs(af_k) >= alpha_mod_f,
+        #                           (ca.fabs(af_k) - alpha_mod_f)**2, 0.0)
+        # J += w_alpha * ca.if_else(ca.fabs(ar_k) >= alpha_mod_r,
+        #                           (ca.fabs(ar_k) - alpha_mod_r)**2, 0.0)
         J += w_mu * (z[2, k]**2 + z[3, k]**2)
 
     # Initial condition as parameters
