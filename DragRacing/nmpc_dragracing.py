@@ -3,8 +3,8 @@ from utils import *
 import numpy as np
 
 def nmpc_controller(kappa_table = None):
-    T = 1.0 # planning horizon [s]
-    N = 10  # control intervals
+    T = 2.0 # planning horizon [s]
+    N = 15  # control intervals
     h = T / N
     
     ###################### Modeling Start ######################
@@ -83,12 +83,15 @@ def nmpc_controller(kappa_table = None):
     ## Refer to section 5 of the notebook 
     for k in range(N):
         cons_ineq.append(2.0 - x[0, k])  # <= 0
+        
+        
         # (b) Engine power: Fx <= Peng / max(Ux, eps)
         #cons_ineq.append(u[0, k] - (param["Peng"] / ca.fmax(x[0, k], epsUx)))  # <= 0
-        denom = ca.sqrt(x[0, k]**2 + 1.0)   # ε=1.0 (필요시 0.5~2.0로 조정)
+        denom = ca.sqrt(x[0, k]**2 + 1.0)
         cons_ineq.append(u[0, k] - (param["Peng"] / denom))  # <= 0
         # (c) Obstacle: 1 - ((x-500)/10)^2 - (y/10)^2 <= 0
-        cons_ineq.append(1.0 - ((x[3, k] - 500.0) / 10.0)**2 - (x[4, k] / 10.0)**2)
+        R_obs = 12.0
+        cons_ineq.append(1.0 - ((x[3, k] - 500.0) / R_obs)**2 - (x[4, k] / R_obs)**2)
 
     ## friction cone constraints
     for k in range(N):
@@ -111,9 +114,9 @@ def nmpc_controller(kappa_table = None):
     
     # weights for case_0
     w_y, w_phi, w_r, w_Uy = 1.0, 2.0, 0.5, 1.0
-    w_v, v_des            = 0.2, 200.0
+    w_v, v_des            = 0.05, 200.0
     w_delta, w_du         = 0.1, 5.0
-    w_mu, w_alpha         = 1e3, 5e3
+    w_mu, w_alpha         = 1e6, 5e3
     w_yT, w_phiT, w_xT    = 1.0, 4.0, 0.0
     
     # # weights for case_1
