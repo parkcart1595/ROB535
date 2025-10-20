@@ -82,16 +82,13 @@ def nmpc_controller(kappa_table = None):
     ## state / inputs limits:
     ## Refer to section 5 of the notebook 
     for k in range(N):
-        cons_ineq.append(2.0 - x[0, k])  # <= 0
-        
-        
+        # cons_ineq.append(2.0 - x[0, k])  # <= 0
         # (b) Engine power: Fx <= Peng / max(Ux, eps)
         #cons_ineq.append(u[0, k] - (param["Peng"] / ca.fmax(x[0, k], epsUx)))  # <= 0
-        denom = ca.sqrt(x[0, k]**2 + 1.0)
+        denom = ca.sqrt(x[0, k]**2 + 1.0)   # ε=1.0 (필요시 0.5~2.0로 조정)
         cons_ineq.append(u[0, k] - (param["Peng"] / denom))  # <= 0
         # (c) Obstacle: 1 - ((x-500)/10)^2 - (y/10)^2 <= 0
-        R_obs = 12.0
-        cons_ineq.append(1.0 - ((x[3, k] - 500.0) / R_obs)**2 - (x[4, k] / R_obs)**2)
+        cons_ineq.append(1.0 - ((x[3, k] - 500.0) / 12.0)**2 - (x[4, k] / 12.0)**2)
 
     ## friction cone constraints
     for k in range(N):
@@ -113,11 +110,15 @@ def nmpc_controller(kappa_table = None):
     ## Refer to section 6 in the notebook for more details.
     
     # weights for case_0
-    w_y, w_phi, w_r, w_Uy = 1.0, 2.0, 0.5, 1.0
-    w_v, v_des            = 0.05, 200.0
-    w_delta, w_du         = 0.1, 5.0
-    w_mu, w_alpha         = 1e6, 5e3
-    w_yT, w_phiT, w_xT    = 1.0, 4.0, 0.0
+    w_y, w_phi, w_r, w_Uy = 10.0, 20.0, 6.0, 6.0
+    w_beta                = 8.0
+    w_v, v_max, a_ref     = 0.04, 90.0, 3.5
+    w_delta, w_du         = 0.4, 40.0
+    w_mu, w_alpha         = 1e5, 5e3
+    w_yT, w_phiT, w_xT    = 40.0, 60.0, 300.0
+    
+    w_prog                = 80.0                # <- 새 항: 세계 x-방향 속도 보상
+    w_back                = 50.0                # <- 새 항: 후진 억제(힌지)
     
     # # weights for case_1
     # w_y, w_phi, w_r, w_Uy = 0.5, 2.0, 0.5, 1.0
@@ -129,14 +130,35 @@ def nmpc_controller(kappa_table = None):
     J = 0.0
     J += w_yT * x[4, N]**2 + w_phiT * x[5, N]**2 - w_xT * x[3, N]  # Terminal cost
     
+    def smooth_pospart(x, eps=1e-4):
+        return 0.5 * (x + ca.sqrt(x*x + eps))
+    
     ## road tracking 
     for k in range(N):
-        J += (w_y   * x[4, k]**2
-              + w_phi * x[5, k]**2
-              + w_r   * x[2, k]**2
-              + w_Uy  * x[1, k]**2
-              + w_v   * (x[0, k] - v_des)**2
-              + w_delta * u[1, k]**2)
+        t_k = (k+1)*h
+        
+        Ux0_sym = p[0]
+        v_des_k = ca.fmin(v_max, Ux0_sym + a_ref*t_k)
+        
+        v_x_world = ca.cos(x[5, k]) * x[0, k] - ca.sin(x[5, k]) * x[1, k]
+        beta = ca.atan2(x[1, k], ca.sqrt(x[0, k]**2 + 1e-6))
+
+        # J += (w_y   * x[4, k]**2
+        #       + w_phi * x[5, k]**2
+        #       + w_r   * x[2, k]**2
+        #       + w_Uy  * x[1, k]**2
+        #       + w_v   * (x[0, k] - v_des)**2
+        #       + w_delta * u[1, k]**2)
+        J += ( w_y   * x[4, k]**2
+            + w_phi * x[5, k]**2
+            + w_r   * x[2, k]**2
+            + w_Uy  * x[1, k]**2
+            + w_beta* beta**2                      # 새 항
+            + w_v   * (x[0, k] - v_des_k)**2      # 램프 참조
+            + w_delta * u[1, k]**2
+            - w_prog * v_x_world                   # 전진 보상
+            + w_back * smooth_pospart(-v_x_world, 1e-4)**2   # 후진 억제(힌지)
+        )
         
         if k > 0:
             J += w_du * ((u[0, k] - u[0, k-1])**2 + (u[1, k] - u[1, k-1])**2)
